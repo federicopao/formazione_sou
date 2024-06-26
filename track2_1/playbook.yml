@@ -1,0 +1,28 @@
+- hosts: all
+  become: yes
+  tasks:
+   - name: install Docker
+     apt:
+       name: docker.io
+       state: present
+       update_cache: true
+
+   - name: Pull Docker image
+     docker_image:
+       name: jenkins/jenkins
+       source: pull
+
+   - name: Create container
+     docker_container:
+       name: container
+       state: started
+       image: jenkins/jenkins
+       ports:
+        - "8080:8080"
+        - "50000:50000"
+
+
+
+
+
+ 
