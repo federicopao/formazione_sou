@@ -1,0 +1,49 @@
+- hosts: all
+  become: yes
+  tasks:
+   - name: install Docker
+     apt:
+       name: docker.io
+       state: present
+       update_cache: true
+
+   - name: Pull Docker image
+     docker_image:
+       name: ealen/echo-server
+       source: pull
+
+   - name: Create container
+     docker_container:
+       name: container
+       state: started
+       image: ealen/echo-server
+
+- hosts: node1
+  become: yes
+  tasks:
+   - name: kill container
+     shell: "sudo -i docker kill container"
+     
+- hosts: node1
+  become: yes
+  tasks:
+   - name: crontab1
+     cron:
+        name: c1
+        minute: "*/2"
+        job: "sudo -i docker start container && sleep 60 && sudo -i docker kill container"
+
+- hosts: node2
+  become: yes
+  tasks:
+   - name: crontab2
+     cron:
+        name: c2
+        minute: "*/2"
+        job: "sudo -i docker kill container && sleep 60 && sudo -i docker start container"
+
+
+
+
+
+ 
