@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+
+    stages {
+        
+        stage('Clone Repository') {
+            steps {
+                    sh "git clone https://github.com/federicopao/formazione_sou.git"
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                    sh """
+                    helm install myappname11 ./formazione_sou/charts/myapp
+                    """
+            }
+        }
+        
+        stage('Verify deploy') {
+            steps {
+                
+                script {
+                    
+                    def APISERVER = sh(script: "kubectl config view --minify | grep server | cut -f 2- -d ':' | tr -d ' '", returnStdout: true).trim()
+                    def TOKEN = sh(script: "kubectl describe secret explorer-token | grep -E '^token' | cut -f2 -d':' | tr -d ' '", returnStdout: true).trim()
+        
+                    sh(script: "curl ${APISERVER}/apis/apps/v1/namespaces/default/deployments/myappname11 --header 'Authorization: Bearer ${TOKEN}' --insecure -o deployment.json")
+        
+                    sh(script: "./formazione_sou/script.sh")
+                }
+                
+            }
+        }
+
+    }
+}

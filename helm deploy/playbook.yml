@@ -1,0 +1,87 @@
+- hosts: all
+  become: yes
+  tasks:
+   - name: install Docker
+     apt:
+       name: docker.io
+       state: present
+       update_cache: true
+   
+   - name: "Copy image in VM for build"
+     ansible.builtin.template:
+       src: /Users/federico/desktop/kube/formazione_sou_k8s/JenkinsDocker/Dockerfile
+       dest: ./
+       owner: vagrant
+       group: vagrant
+       mode: "0740"
+
+   - name: "Copy ca.crt in VM"
+     ansible.builtin.template:
+       src: /Users/federico/desktop/kube/formazione_sou_k8s/ca.crt
+       dest: ./
+       owner: vagrant
+       group: vagrant
+       mode: "0740"
+
+   - name: "Copy config in VM"
+     ansible.builtin.template:
+       src: /Users/federico/desktop/kube/formazione_sou_k8s/config
+       dest: ./
+       owner: vagrant
+       group: vagrant
+       mode: "0740"
+
+   - name: "Copy client.crt in VM"
+     ansible.builtin.template:
+       src: /Users/federico/desktop/kube/formazione_sou_k8s/client.crt
+       dest: ./
+       owner: vagrant
+       group: vagrant
+       mode: "0740"
+
+   - name: "Copy client.key in VM"
+     ansible.builtin.template:
+       src: /Users/federico/desktop/kube/formazione_sou_k8s/client.key
+       dest: ./
+       owner: vagrant
+       group: vagrant
+       mode: "0740"
+
+   - name: "Copy myapp in VM"
+     ansible.builtin.copy:
+       src: /Users/federico/desktop/kube/formazione_sou_k8s/myapp
+       dest: ./
+       owner: vagrant
+       group: vagrant
+       mode: "0740"
+
+   - name: "Build image"
+     docker_image:
+       name: dockerfile
+       source: build
+       build:
+         path: ./
+         dockerfile: Dockerfile
+
+   - name: Create container
+     docker_container:
+       name: container
+       state: started
+       image: dockerfile
+       ports:
+        - "8080:8080"
+        - "50000:50000"
+       volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+
+   - name: Permission for docker socket
+     ansible.builtin.shell:
+       cmd: sudo -i docker exec -it --user root container bash -c 'cd /var/run && chgrp docker docker.sock'
+
+   - name: Permission for helm file
+     ansible.builtin.shell:
+       cmd: sudo -i docker exec -it --user root container bash -c 'cd /var/jenkins_home/.kube && chmod -R 777 *'
+
+
+
+ 
