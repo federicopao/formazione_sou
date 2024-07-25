@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: andreavomero99/ciao
+  repository: federicopao/formazione_sou_k8s
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "1.0.1"
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""
