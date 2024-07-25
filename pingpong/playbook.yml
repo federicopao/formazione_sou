@@ -23,6 +23,22 @@
   tasks:
    - name: kill container
      shell: "sudo -i docker kill container"
+
+- hosts: all
+  become: yes
+  tasks:
+  - name: Pause for 60 seconds
+     ansible.builtin.pause:
+       seconds: 60
+
+- hosts: node2
+  become: yes
+  tasks:
+   - name: crontab2
+     cron:
+        name: c2
+        minute: "*/2"
+        job: "sudo -i docker kill container && sleep 60 && sudo -i docker start container"
      
 - hosts: node1
   become: yes
@@ -33,14 +49,7 @@
         minute: "*/2"
         job: "sudo -i docker start container && sleep 60 && sudo -i docker kill container"
 
-- hosts: node2
-  become: yes
-  tasks:
-   - name: crontab2
-     cron:
-        name: c2
-        minute: "*/2"
-        job: "sudo -i docker kill container && sleep 60 && sudo -i docker start container"
+
 
 
 
