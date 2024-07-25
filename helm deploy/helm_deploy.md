@@ -1,0 +1,4 @@
+Creare un Helm Chart (utilizzare helm init) custom che effettui il deploy dell'immagine creata tramite la pipeline flask-app-example-build (in input deve essere possibile specificare quale tag rilasciare)
+Scrivere pipeline dichiarativa Jenkins che prenda da GIT il repo chart versionato in "formazione_sou_k8s" ed effettui "helm install" sull'instanza K8s locale su namespace "formazione_sou"
+Autenticandosi tramite un Service Account di tipo "cluster-reader" (studiare bene RBAC di k8s)  esegua un export del Deployment dell'applicazione Flask installata tramite la Track 3. E' possibile scegliere tra: utilizzo API k8s (modulo python kubernetes, wrapping di kubectl (es: kubectl get deployment foobar -o yaml -n formazione_sou), wrapping di curl (sempre verso le API)
+L'automatismo deve ritornare un errore se non presenti nel Deployment i seguenti attributi: Readiness e Liveness Probles, Limits e Requests
