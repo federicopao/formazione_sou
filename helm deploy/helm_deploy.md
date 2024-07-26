@@ -37,10 +37,11 @@ Svolgimento:
         port: http
      ```
    - per creare e dare i permessi al service account creo i seguenti oggetti
-     https://github.com/federicopao/formazione_sou/helm deploy/charts/myapp/serviceaccount.yaml
-     https://github.com/federicopao/formazione_sou/helm deploy/charts/myapp/clusterrole.yaml (permessi di lettura)
-     https://github.com/federicopao/formazione_sou/helm deploy/charts/myapp/clusterrolebinding.yaml
-     https://github.com/federicopao/formazione_sou/helm deploy/charts/myapp/secret.yaml (per creare il token del service account)
+     
+     https://github.com/federicopao/formazione_sou/tree/main/helm%20deploy/myapp/templates/serviceaccount.yaml
+     https://github.com/federicopao/formazione_sou/tree/main/helm%20deploy/myapp/templates/clusterrole.yaml (permessi di lettura)
+     https://github.com/federicopao/formazione_sou/tree/main/helm%20deploy/myapp/templates/clusterrolebinding.yaml
+     https://github.com/federicopao/formazione_sou/tree/main/helm%20deploy/myapp/templates/secret.yaml (per creare il token del service account)
 
 3. Eseguo il push del chart su github
 
@@ -63,5 +64,54 @@ Svolgimento:
 
    - nel file ansible mi copio i certificati, il kube config e l'immagine da buildare, poi fornisco i permessi necessari in modo che
      jenkins possa accedere ai certificati
-7. L'immagine personalizzata di jenkins mi copia.... mi installa...
+     
+7. L'immagine personalizzata di jenkins installa tutto quello di cui ho bisogno per svolgere l'esercizio:
+   - docker
+   - helm
+   - jq
+   - kubectl
+   copio nell'immagine il kube config e i certificati passati nella vm da Ansible
+
+8. Eseguo il "vagrant up" per creare e configurare la macchina virtuale con un container contenente l'immagine jenkins personalizzata,
+   ora abbiamo la vm con i permessi configurati per poter accedere al cluster in ascolto.
+   Apro il browser inserendo l'ip della vm con la porta 8080 per potermi connettere alla dashboard di jenkins che da repository git si
+   prende il jenkins file contenente la pipeline da eseguire
+   (https://github.com/federicopao/formazione_sou/blob/main/helm%20deploy/jenkinsfile)
+
+9. La pipeline esegue il git clone della repoitory contenente l'helm chart e tutti i file necessari per svolgere l'esercizio
+   ```
+   sh "git clone https://github.com/federicopao/formazione_sou.git"
+   ```
+   esegue l'helm install del chart
+   ```
+   sh "helm install myappname11 ./formazione_sou/charts/myapp"
+   ```
+   esegue l'export del deployment autenticandosi con un service account ed esegue uno script per verificare che i campi specificati
+   nel testo dell'esercizio non siano vuoti
+   ```
+   script {
+                    
+                    def APISERVER = sh(script: "kubectl config view --minify | grep server | cut -f 2- -d ':' | tr -d ' '", returnStdout: true).trim()
+                    # Richiedo al cluster il token associato al service account per potermi autenticare nel curl
+                    def TOKEN = sh(script: "kubectl describe secret explorer-token | grep -E '^token' | cut -f2 -d':' | tr -d ' '", returnStdout: true).trim()
+                    # Richiedo all'apiserver il file yaml del deployment salvandolo in un file json
+                    sh(script: "curl ${APISERVER}/apis/apps/v1/namespaces/default/deployments/myappname11 --header 'Authorization: Bearer ${TOKEN}' --insecure -o deployment.json")
+        
+                    sh(script: "./formazione_sou/script.sh")
+   }
+   ```
+   nello script interrogo il file json con il comando jq
+   ```
+   HAS_LIVENESS_PROBE=$(jq '.spec.template.spec.containers[] | select(has("livenessProbe")) | .name' deployment.json)
+
+   HAS_READINESS_PROBE=$(jq '.spec.template.spec.containers[] | select(has("readinessProbe")) | .name' deployment.json)
    
+   HAS_LIMITS=$(jq '.spec.template.spec.containers[] | select(has("limits")) | .name' deployment.json)
+   
+   HAS_REQUESTS=$(jq '.spec.template.spec.containers[] | select(has("requests")) | .name' deployment.json)
+   if [ -z "$HAS_LIVENESS_PROBE" ] || [ -z "$HAS_READINESS_PROBE" ] || [ -z "$HAS_LIMITS" ] || [ -z "$HAS_REQUESTS" ]; then
+     echo "ERROR"
+   else
+     echo "SUCCESS"
+   fi
+   ```
