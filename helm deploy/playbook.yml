@@ -9,7 +9,7 @@
    
    - name: "Copy image in VM for build"
      ansible.builtin.template:
-       src: /Users/federico/desktop/kube/formazione_sou_k8s/JenkinsDocker/Dockerfile
+       src: /Users/federico/desktop/kube/formazione_sou/helm%20deploy/Dockerfile
        dest: ./
        owner: vagrant
        group: vagrant
