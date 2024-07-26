@@ -12,7 +12,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                     sh """
-                    helm install myappname11 ./formazione_sou/charts/myapp
+                    helm install myappname11 ./formazione_sou/helm%20deploy/charts/myapp
                     """
             }
         }
