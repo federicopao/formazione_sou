@@ -1,0 +1,40 @@
+- hosts: all
+  become: yes
+  tasks:
+   - name: install Bind
+     apt:
+       name: bind9
+       state: present
+       update_cache: true
+
+   - name: "Copy named.conf.options in VM"
+     ansible.builtin.template:
+       src: ./named.conf.options
+       dest: /etc/bind/
+       owner: root
+       group: bind
+       mode: "0644"
+  
+   - name: "Copy named.conf.local in VM"
+     ansible.builtin.template:
+       src: ./named.conf.local
+       dest: /etc/bind/
+       owner: root
+       group: bind
+       mode: "0644"
+
+   - name: "Copy zone file in VM"
+     ansible.builtin.template:
+       src: ./db.apps.okd.devops.lab
+       dest: /etc/bind/
+       owner: root
+       group: bind
+       mode: "0644"
+   
+   - name: "restart server"
+     ansible.builtin.shell:
+       cmd: sudo systemctl restart bind9
+
+
+
+ 

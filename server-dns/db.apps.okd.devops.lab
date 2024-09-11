@@ -1,0 +1,17 @@
+$TTL 3600
+@   IN  SOA ns1.apps.okd.devops.lab. root.apps.okd.devops.lab. (
+            2024090901 ; Serial
+            3600       ; Refresh
+            1800       ; Retry
+            604800     ; Expire
+            86400      ; Minimum TTL
+)
+
+; Definizione del server dei nomi
+@   IN  NS  ns1.apps.okd.devops.lab.
+
+; Record A per il server DNS (se necessario)
+ns1 IN  A   127.0.0.1
+
+; Record A per route-oca-base-fe-paolucci
+route-oca-base-fe-paolucci  IN  A  51.178.68.233
